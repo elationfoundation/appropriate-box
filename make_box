@@ -1,0 +1,29 @@
+#IP=$(ip neighbor |cut -d ' '  -f 1)
+#echo "If $IP is not the node ip address this wont work."
+
+IP=$1
+if [ -z "$IP" ]
+then
+	echo "Enter the IP address of the node you want the box on"
+	exit 0
+else
+	echo "You have chosen IP address ($IP). Starting installation. "
+fi
+
+echo "creating directories (2)"
+ssh root@$IP 'mkdir /usr/lib/lua/luci/controller/appropriate' || true
+ssh root@$IP 'mkdir /usr/lib/lua/luci/view/appropriate' || true
+
+echo "creating directories (2)"
+scp box/box.lua root@$IP:/usr/lib/lua/luci/controller/appropriate/.
+scp box/box.htm root@$IP:/usr/lib/lua/luci/view/appropriate/.
+
+echo "creating appropriate box file @ /www/luci/media/app_box"
+ssh root@$IP 'mkdir /www/luci/media/app_box' || true
+
+echo "clearing luci cache to refresh box"
+ssh root@$IP 'rm -fr /tmp/luci*cache'
+
+echo "Go to http://$IP/cgi-bin/luci/commotion/appropriate to see the box"
+
+exit 0 

@@ -26,20 +26,8 @@
 		require("luci.dispatcher")
 
 		local field   = luci.http.formvalue('field')
-		local request = luci.dispatcher.context.args
-		local path    = { '/www/luci/media/pirate' } 
-
-		for i = 1, #request do
-			if request[i] ~= '..' and #request[i] > 0 then
-				path[#path+1] = request[i]
-			end
-		end
-
-		local filepath = table.concat( path, '/' )
 		local filestat = nixio.fs.stat( filepath )
-		local baseurl  = luci.dispatcher.build_url('media', 'viewer')
-		local downloadurl = luci.dispatcher.build_url('media', 'download')
-
+		local baseurl  = luci.dispatcher.build_url('commotion', 'appropriate')
 		if filestat and filestat.type == "reg" then
 			table.remove( path, #path )
 			filepath = table.concat( path, '/' ) .. '/'
@@ -52,26 +40,15 @@
 
 		local entries = nixio.util.consume((nixio.fs.dir(filepath)))
 	-%>
-
+	
 <center><h1>Appropriate Box</h1>
 <div> Click on a file in the list below to download.</div></center>
-    <div id="path">
-		Location:
-		<% for i, dir in ipairs(path) do %>
-			<% if i == 1 then %>
-				<a href="<%=baseurl%>?field=<%=field%>">(FILES GO HERE!!)</a>
-			<% elseif next(path, i) then %>
-				<% baseurl = baseurl .. '/' .. dir %>
-				/ <a href="<%=baseurl%>?field=<%=field%>"><%=dir%></a>
-			<% else %>
-				<% baseurl = baseurl .. '/' .. dir %>
-				/ <%=dir%>
-			<% end %>
-		<% end %>
-	</div>
-
 <hr />
-	<div id="listing">
+<center>
+	<div id="listing" align="left" style="width:400px;">
+	  <%- if #entries == 0 then -%>
+	  <h2 align="center"> No Files Uploaded, Please Upload a file below. </h2>
+	  <%-end-%>
 		<ul>
 			<% for _, e in luci.util.vspairs(entries) do
 			    local stat = nixio.fs.stat(filepath..e)
@@ -79,7 +56,7 @@
 			-%>
 				<li class="dir">
 					<img src="<%=resource%>/cbi/folder.gif" alt="<%:Directory%>" />
-					<a href="<%=baseurl%>/<%=e%>?field=<%=field%>"><%=e%>/</a>
+					<a href="<%=baseurl%>?dir=<%=e%>"><%=e%>/</a>
 				</li>
 			<% end end -%>
 
@@ -89,11 +66,14 @@
 			-%>
 				<li class="file">
 				  <img src="<%=resource%>/cbi/file.gif" alt="<%:File%>" />
-				  <a href="<%=downloadurl%>?file=<%=e%>"><%=e%></a>
+				  <a href="<%=baseurl%>?file=<%=e%>"><%=e%></a>
 				</li>
 			<% end end -%>
 		</ul>
 	</div>
+</center>
+
+<hr>
 
 <center><h2>Upload A File</h2>
 <fieldset class="cbi-section">
@@ -102,12 +82,12 @@
   <div class="cbi-section-node">
 	<div class="cbi-value cbi-value-last<% if image_invalid then %> cbi-value-error<% end %>">
 	  <div class="cbi-value-field">
-		<input type="file" name="file" id="media" />
-		<input type="submit" class="cbi-button cbi-input-apply" value="<%:upload%>" style="width:100px" />
+		<input type="file" id="media" name="upload" />
+		<input type="submit" name="uploader" class="cbi-button cbi-input-apply" value="<%:upload%>" style="width:100px" />
 	  </div>
 	</div>
   </div>
 </form>
 </fieldset>
-</body>			
+</body>
 <%+footer%>
